@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Regalo para Ashlye - Thomy</title>
+    <style>
+        /* --- RESET Y BASE --- */
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background: #000; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        }
+
+        .pantalla {
+            height: 100vh; 
+            width: 100vw; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            position: relative;
+            background-size: cover; 
+            transition: background 1.2s ease-in-out;
+            /* Importante para que los z-index funcionen correctamente */
+            overflow: hidden; 
+        }
+
+        /* --- ESTADOS DE FONDO --- */
+        .fondo-amanecer { 
+            background: linear-gradient(135deg, #fce4ec, #f8bbd0, #f48fb1) !important;
+        }
+
+        .fondo-dia { 
+            background: linear-gradient(-45deg, #8e44ad, #a569bd, #d2b4de) !important;
+        }
+
+        .fondo-atardecer { 
+            background: linear-gradient(180deg, #d1d5db, #f3f4f6, #ffffff) !important;
+        }
+
+        .fondo-noche { 
+            background: linear-gradient(-45deg, #000428, #004e92, #050505, #000428) !important; 
+        }
+
+        /* --- CANVASES Y EFECTOS --- */
+        #canvas-noche, #canvas-corazones, #canvas-tulipanes { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            pointer-events: none; 
+            opacity: 0; 
+            transition: opacity 1s; 
+        }
+
+        /* Capas (z-index) */
+        #canvas-noche { z-index: 1; }
+        #canvas-corazones { z-index: 2; }
+        
+        /* MODIFICADO: Tulipanes DEBAJO del sobre (z-index menor) */
+        #canvas-tulipanes { 
+            z-index: 5; /* Un valor bajo para que esté detrás */
+        }
+
+        /* Mostrar efectos según el fondo */
+        .fondo-noche #canvas-noche { opacity: 1; }
+        .fondo-amanecer #canvas-corazones, .fondo-dia #canvas-corazones { opacity: 1; }
+
+        /* NUEVO: Mostrar tulipanes SOLO en Atardecer */
+        .fondo-atardecer #canvas-tulipanes { 
+            opacity: 1; 
+        }
+
+        /* --- EL SOBRE --- */
+        .sobre-contenedor { 
+            position: relative; 
+            width: 300px; 
+            height: 200px; 
+            z-index: 10; /* Mayor que el canvas de tulipanes */
+            perspective: 1000px;
+        }
+
+        .sobre { 
+            position: relative; 
+            width: 100%; 
+            height: 100%; 
+            background: #e0c394; 
+            border-radius: 0 0 8px 8px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        /* (Resto de los estilos del sobre se mantienen igual...) */
+        .solapa { position: absolute; top: 0; left: 0; z-index: 5; border-left: 150px solid transparent; border-right: 150px solid transparent; border-top: 110px solid #d4ad6a; transform-origin: top; transition: 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        .frente-izq { position: absolute; left: 0; z-index: 4; border-top: 100px solid transparent; border-bottom: 100px solid transparent; border-left: 152px solid #e6cc9c; }
+        .frente-der { position: absolute; right: 0; z-index: 4; border-top: 100px solid transparent; border-bottom: 100px solid transparent; border-right: 152px solid #e6cc9c; }
+        .frente-inf { position: absolute; bottom: 0; z-index: 4; border-left: 150px solid transparent; border-right: 150px solid transparent; border-bottom: 105px solid #ecd0a5; }
+
+        /* --- CARTA FLEXIBLE --- */
+        .carta {
+            position: absolute; top: 5px; left: 10px; width: 280px; min-height: 180px; height: auto; background: rgba(255, 255, 255, 0.95); z-index: 2; transition: 0.7s ease-in-out; padding: 15px; text-align: center; box-sizing: border-box; border-radius: 4px; box-shadow: 0 0 10px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        
+        #mensaje { margin: 0; margin-bottom: 8px; font-size: 0.95rem; line-height: 1.3; color: #2c3e50; word-wrap: break-word; }
+
+        /* --- ANIMACIÓN --- */
+        .sobre.abierto .solapa { transform: rotateX(180deg); z-index: 1; }
+        /* Ajuste para que la carta no suba tanto */
+        .sobre.abierto .carta { transform: translateY(-110px); }
+
+        /* --- BOTONES Y CONTROLES --- */
+        .controles { 
+            margin-top: 160px; 
+            z-index: 20; /* Mayor que el sobre y el canvas de tulipanes */
+            display: flex; 
+            gap: 10px; 
+        }
+        
+        button { 
+            padding: 12px 25px; cursor: pointer; border-radius: 25px;
+            /* Contraste por defecto para fondos claros */
+            background: rgba(0, 0, 0, 0.1) !important; color: #333 !important; border: 1px solid rgba(0, 0, 0, 0.2) !important;
+            backdrop-filter: blur(5px); font-weight: bold; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        button:hover { background: rgba(0, 0, 0, 0.2) !important; transform: scale(1.1); }
+        
+        /* Botones claros para la noche */
+        .fondo-noche button {
+            background: rgba(255, 255, 255, 0.2) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        }
+    </style>
+</head>
+<body>
+
+<div id="escena" class="pantalla fondo-amanecer">
+    <canvas id="canvas-tulipanes"></canvas>
+    
+    <canvas id="canvas-corazones"></canvas>
+    <canvas id="canvas-noche"></canvas>
+    
+    <div class="sobre-contenedor">
+        <div id="sobre" class="sobre">
+            <div class="solapa"></div>
+            <div class="frente-izq"></div>
+            <div class="frente-der"></div>
+            <div class="frente-inf"></div>
+            <div class="carta">
+                <p id="mensaje">Cargando mensaje...</p>
+                <span id="corazon-rojo" style="color: #e74c3c; font-size: 24px;">❤</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="controles">
+        <button onclick="cambiar(-1)">⬅</button>
+        <button id="btn-abrir">Abrir</button>
+        <button onclick="cambiar(1)">➡</button>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
